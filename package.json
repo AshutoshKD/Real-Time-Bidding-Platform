@@ -1,0 +1,15 @@
+{
+  "name": "rtb-root",
+  "private": true,
+  "workspaces": [
+    "web"
+  ],
+  "scripts": {
+    "build": "npm run build -w web",
+    "dev": "npm run dev -w web",
+    "start": "npm run start -w web",
+    "install:web": "npm install -w web"
+  }
+}
+
+
