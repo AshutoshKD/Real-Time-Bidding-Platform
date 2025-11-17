@@ -20,6 +20,10 @@ export async function connectRealtime(
   user: User,
   onMessage: (m: RTBMessage) => void
 ): Promise<RealtimeConn> {
+  const force = process.env.NEXT_PUBLIC_TRANSPORT;
+  if (force === "ws") {
+    return await connectWS(roomId, user, onMessage);
+  }
   try {
     return await connectWebRTC(roomId, user, onMessage);
   } catch (e) {
@@ -91,7 +95,8 @@ async function connectWebRTC(
   await pc.setRemoteDescription({ type: "answer", sdp: answerSDP });
 
   await new Promise<void>((resolve, reject) => {
-    const timeout = setTimeout(() => reject(new Error("dc open timeout")), 8000);
+    const dcTimeout = process.env.NODE_ENV === "production" ? 2000 : 8000;
+    const timeout = setTimeout(() => reject(new Error("dc open timeout")), dcTimeout);
     dc.onopen = () => {
       clearTimeout(timeout);
       resolve();
