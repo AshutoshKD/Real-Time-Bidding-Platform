@@ -5,11 +5,13 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
-	"github.com/gorilla/mux"
 	"rtb/internal/auction"
 	"rtb/internal/realtime"
+
+	"github.com/gorilla/mux"
 )
 
 // Basic types for the HTTP API (auctions CRUD) kept in this file for simplicity of scaffold.
@@ -31,7 +33,7 @@ func fromCents(v int64) float64 {
 }
 
 func main() {
-	addr := getEnv("RTB_HTTP_ADDR", ":8080")
+	addr := listenAddr()
 	mgr := auction.NewManager()
 
 	r := mux.NewRouter()
@@ -107,6 +109,25 @@ func main() {
 	}
 }
 
+func listenAddr() string {
+	addr := os.Getenv("RTB_HTTP_ADDR")
+	port := os.Getenv("PORT")
+	if addr == "" {
+		if port != "" {
+			return ":" + port
+		}
+		return ":8080"
+	}
+	if strings.Contains(addr, "$PORT") && port != "" {
+		return strings.ReplaceAll(addr, "$PORT", port)
+	}
+	// Support formats like "0.0.0.0:$PORT"
+	if strings.Contains(addr, ":$PORT") && port != "" {
+		return strings.ReplaceAll(addr, "$PORT", port)
+	}
+	return addr
+}
+
 func getEnv(key, def string) string {
 	if v := os.Getenv(key); v != "" {
 		return v
@@ -143,5 +164,3 @@ func simpleCORS(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
-
-
